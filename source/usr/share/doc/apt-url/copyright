@@ -1,15 +1,15 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: gitcraken-license-pro
-Source: https://github.com/Aetherinox/proteus-app-manager/
+Upstream-Name: apt-url
+Source: https://github.com/Aetherinox/debian-apt-url
 
 Files: *
-Copyright: 2023 Aetherinox
+Copyright: 2024 Aetherinox
 License: MIT-License
 
 License: MIT-License
  MIT License
 
- Copyright (c) 2023-2023 Aetherinox
+ Copyright (c) 2023-2024 Aetherinox
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal

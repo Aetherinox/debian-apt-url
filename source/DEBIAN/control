@@ -1,5 +1,5 @@
 Package: apt-url
-Version: 1.0.0-2
+Version: 1.1.0-1
 Section: utils
 Priority: optional
 Architecture: all

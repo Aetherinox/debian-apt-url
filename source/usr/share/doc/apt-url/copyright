@@ -3,13 +3,13 @@ Upstream-Name: apt-url
 Source: https://github.com/Aetherinox/debian-apt-url
 
 Files: *
-Copyright: 2024 Aetherinox
+Copyright: 2025 Aetherinox
 License: MIT-License
 
 License: MIT-License
  MIT License
 
- Copyright (c) 2023-2024 Aetherinox
+ Copyright (c) 2023-2025 Aetherinox
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal

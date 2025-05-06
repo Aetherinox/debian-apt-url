@@ -1,5 +1,8 @@
 # apt-url
-A debian package to fetch direct download links for .deb packages specified by name
+
+A debian package to fetch direct download links for .deb packages specified by name. 
+
+This package is used in combination with [LastVersion](https://github.com/dvershinin/lastversion) as part of the system for the [Proteus Apt Repository](https://github.com/Aetherinox/proteus-apt-repo); which is a custom package repository for ZorinOS and Ubuntu. It is used to fetch the direct URL to a package and then is downloaded and added to the repository automatically.
 
 <br />
 

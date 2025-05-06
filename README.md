@@ -18,6 +18,7 @@ This package is used in combination with [LastVersion](https://github.com/dversh
     - [--aptOnly](#--aptonly)
     - [--pretty](#--pretty)
     - [--help](#--help)
+  - [Install](#install)
 
 <br />
 
@@ -27,7 +28,7 @@ This package is used in combination with [LastVersion](https://github.com/dversh
 
 ## Usage
 
-The following are commands you can execute with `apt-move`:
+The following are commands you can execute with `apt-url`:
 
 <br />
 
@@ -147,4 +148,70 @@ $ apt-url --help
         -v,  --version                    current version of this app         
         -x,  --dev                        developer mode; verbose logging     
         -h,  --help                       show this help menu             
+```
+
+<br />
+
+---
+
+<br />
+
+## Install
+
+If you do not wish to manually install or build your own copy; you can add it via our [Proteus Apt Repository](https://github.com/Aetherinox/proteus-apt-repo).
+
+Download the GPG key utilized with the repository:
+
+```shell
+wget -qO - https://github.com/Aetherinox.gpg | \
+  sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/aetherinox-proteus-archive.gpg
+```
+
+<br />
+
+Add the Proteus Apt repo to your Linux sources:
+
+```shell
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/aetherinox-proteus-archive.gpg] https://raw.githubusercontent.com/Aetherinox/proteus-apt-repo/main $(lsb_release -cs) main" | \
+  sudo tee /etc/apt/sources.list.d/aetherinox-proteus-archive.list
+```
+
+<br />
+
+Now update your packages so that the new repo is added:
+
+```shell
+sudo apt update
+```
+
+<br />
+
+==(Optional)== To test if the correct GPG key was added:
+
+```shell
+gpg -n -q --import --import-options import-show \
+    /usr/share/keyrings/aetherinox-proteus-archive.gpg | \
+    awk -v val=BCA07641EE3FCD7BC5585281488D518ABD3DC629 '/pub/{getline; gsub(/^ +| +$/,"");
+    if($0 == val)
+        print "("$0") Found match for Proteus Apt Repo."
+    else
+        print "("$0") No match for Proteus Apt Repo."}'
+```
+
+<br />
+
+You can then install `apt-url` with:
+
+```shell
+sudo apt install apt-url
+```
+
+<br />
+
+==(Optional)== You can test to make sure you are getting the package from the correct source. The URL returned should be the one to the proteus apt repo.
+
+```shell
+$ apt-get download --print-uris apt-url
+
+'https://raw.githubusercontent.com/Aetherinox/proteus-apt-repo/main/pool/main/a/apt-url/apt-url_1.0.0-2_all.deb' apt-url_1.0.0-2_all.deb 2310 SHA512:5d04d99e636b897e39c7b7b834e845cd7bc98ed82e5ebb7657fc035819e05d585ddc3c7a8c6e2c9c3c47e56d4529d7b2b185addceb1c2115b6ea32982d6f6de6
 ```

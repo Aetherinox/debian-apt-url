@@ -19,6 +19,7 @@ This package is used in combination with [LastVersion](https://github.com/dversh
     - [--pretty](#--pretty)
     - [--help](#--help)
   - [Install](#install)
+  - [Build](#build)
 
 <br />
 
@@ -214,4 +215,71 @@ sudo apt install apt-url
 $ apt-get download --print-uris apt-url
 
 'https://raw.githubusercontent.com/Aetherinox/proteus-apt-repo/main/pool/main/a/apt-url/apt-url_1.0.0-2_all.deb' apt-url_1.0.0-2_all.deb 2310 SHA512:5d04d99e636b897e39c7b7b834e845cd7bc98ed82e5ebb7657fc035819e05d585ddc3c7a8c6e2c9c3c47e56d4529d7b2b185addceb1c2115b6ea32982d6f6de6
+```
+
+<br />
+
+---
+
+<br />
+
+## Build
+
+To build, you must have the following structure:
+
+```
+📁 src
+    📁 apt-url_1.1.0-1_amd64
+        📁 DEBIAN
+            📄 control
+        📁 usr
+        📁 share
+            📁 doc
+                📁 apt-url
+                    📄 changelog.gz
+                    📄 copyright
+            📁 lintian
+                📁 overrides
+                    📄 PACKAGE_NAME
+
+    📁 apt-url_1.1.0-1_arm64
+        📁 DEBIAN
+            📄 control
+        📁 usr
+        📁 share
+            📁 doc
+                📁 apt-url
+                    📄 changelog.gz
+                    📄 copyright
+            📁 lintian
+                📁 overrides
+                    📄 PACKAGE_NAME
+```
+
+<br />
+
+Compress the changelog:
+
+```shell
+cd src
+gzip --best -n apt-url_1.1.0-1_amd64/usr/share/doc/apt-url/changelog.Debian
+```
+
+<br />
+
+Generate the `.deb` packages:
+
+```shell
+cd src
+dpkg-deb --root-owner-group --build apt-url_1.1.0-1_amd64
+dpkg-deb --root-owner-group --build apt-url_1.1.0-1_arm64
+```
+
+<br />
+
+Run Lintian:
+
+```shell
+lintian apt-url_1.1.0-1_amd64.deb --tag-display-limit 0
+lintian apt-url_1.1.0-1_arm64.deb --tag-display-limit 0
 ```

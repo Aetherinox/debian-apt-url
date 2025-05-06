@@ -206,7 +206,6 @@ function opt_usage
     printf '  %-5s %-81s %-40s\n' "    " "${c[blue2]}-f${c[grey1]},${c[blue2]}  --fileOnly ${c[yellow]}${c[end]}               " "only return url for package${c[end]}" 1>&2
     printf '  %-5s %-81s %-40s\n' "    " "${c[blue2]}-u${c[grey1]},${c[blue2]}  --urlOnly ${c[yellow]}${c[end]}                " "only return filename for package${c[end]}" 1>&2
     printf '  %-5s %-81s %-40s\n' "    " "${c[blue2]}-P${c[grey1]},${c[blue2]}  --pretty ${c[yellow]}${c[end]}                 " "show results in formatted layout${c[end]}" 1>&2
-    printf '  %-5s %-81s %-40s\n' "    " "${c[blue2]}-s${c[grey1]},${c[blue2]}  --status ${c[yellow]}${c[end]}                 " "view list of assigned variables${c[end]}" 1>&2
     printf '  %-5s %-81s %-40s\n' "    " "${c[blue2]}-v${c[grey1]},${c[blue2]}  --version ${c[yellow]}${c[end]}                " "current version of this app${c[end]}" 1>&2
     printf '  %-5s %-81s %-40s\n' "    " "${c[blue2]}-x${c[grey1]},${c[blue2]}  --dev ${c[yellow]}${c[end]}                    " "developer mode; verbose logging${c[end]}" 1>&2
     printf '  %-5s %-81s %-40s\n' "    " "${c[blue2]}-h${c[grey1]},${c[blue2]}  --help ${c[yellow]}${c[end]}                   " "show this help menu${c[end]}" 1>&2
@@ -271,8 +270,7 @@ fi
 # #
 
 if [ -z "${argPackage}" ]; then
-    echo 'Usage:'
-    echo '  ' $app_file_bin '<package>'
+    opt_usage $FUNCNAME
     exit 1
 fi
 
@@ -304,8 +302,9 @@ fi
 
 if echo "$url" | grep --quiet --ignore-case "Couldn't find package" ; then
     if [ "${argBoolPretty}" = true ]; then
+
         echo -e
-        echo -e "💡 Could not find package ${c[yellow]}${argPackage}${c[end]}"
+        printf '%-7s %-29s %-65s\n' " " "  ${c[red]}ERROR${c[end]}" "${c[end]}💡 Could not find package ${c[yellow]}${argPackage}${c[end]}"
         echo -e
     else
         echo -e "Could not find package ${argPackage}"
@@ -343,10 +342,10 @@ else
     if [ "${argBoolPretty}" = true ]; then
         echo -e
         if [ "${argBoolUrlOnly}" = false ]; then
-            printf '%-13s %-29s %-65s\n' " " "  ${c[grey2]}File${c[end]}" "${c[green]}${filename}${c[end]}"
+            printf '%-7s %-29s %-65s\n' " " "  ${c[grey2]}File${c[end]}" "${c[green]}${filename}${c[end]}"
         fi
         if [ "${argBoolFileOnly}" = false ]; then
-            printf '%-13s %-29s %-65s\n' " " "  ${c[grey2]}URL${c[end]}" "${c[green]}${url}${c[end]}"
+            printf '%-7s %-29s %-65s\n' " " "  ${c[grey2]}URL${c[end]}" "${c[green]}${url}${c[end]}"
         fi
         echo -e
     else

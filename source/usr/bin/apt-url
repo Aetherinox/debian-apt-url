@@ -44,6 +44,7 @@ repo_url="https://github.com/${repo_author}/${repo_name}"
 argPackage=
 argBoolFileOnly=false
 argBoolUrlOnly=false
+argBoolPretty=false
 
 # #
 #   define > colors
@@ -152,6 +153,24 @@ get_version()
 }
 
 # #
+#   Check Sudo
+#
+#	this script requires permissions to copy, etc.
+# 	require the user to run as sudo
+# #
+
+check_sudo()
+{
+	if [ "$EUID" -ne 0 ]; then
+        echo
+        echo -e "  ${ORANGE}WARNING      ${WHITE}Must run script with ${YELLOW2}sudo${END}"
+        echo -e "                    ${GREY2}sudo ./${app_file_this}${END}"
+
+        exit 1
+	fi
+}
+
+# #
 #	func > opt_usage
 # #
 
@@ -176,16 +195,17 @@ function opt_usage
     printf '  %-5s %-48s %-40s\n' "    " "    ${c[grey2]}[ -A... ]${c[end]}     " "optional; multiple can be specified" 1>&2
     printf '  %-5s %-48s %-40s\n' "    " "    ${c[grey2]}{ -A | -B }${c[end]}   " "one or the other; do not use both" 1>&2
     printf '  %-5s %-48s %-40s\n' "    " "${c[grey1]}Arguments${c[end]}         " "${c[fuchsia2]}$func_parent${c[end]} [ ${c[grey2]}-p${c[yellow]} package-name${c[end]} | ${c[grey2]}--package ${c[yellow]}package-name${c[end]} ] ${c[yellow]}arg${c[end]}" 1>&2
-    printf '  %-5s %-48s %-40s\n' "    " "${c[grey1]}${c[end]}                  " "${c[fuchsia2]}$func_parent${c[end]} ${c[yellow]}package-name${c[end]}" 1>&2
-    echo -e 
-    printf '  %-5s %-40s\n' "${c[grey1]}Aliases:${c[end]}" "" 1>&2
-    printf '  %-5s %-40s\n' "    " "$cmd_alias${c[end]}" 1>&2
+    printf '  %-5s %-48s %-40s\n' "    " "${c[grey1]}Examples${c[end]}          " "${c[fuchsia2]}${func_parent}${c[end]} ${c[yellow]}package-name${c[end]}" 1>&2
+    printf '  %-5s %-48s %-40s\n' "    " "${c[grey1]}${c[end]}                  " "${c[fuchsia2]}${func_parent}${c[end]} ${c[grey2]}--package ${c[yellow]}package-name${c[end]}" 1>&2
+    printf '  %-5s %-48s %-40s\n' "    " "${c[grey1]}${c[end]}                  " "${c[fuchsia2]}${func_parent}${c[end]} ${c[grey2]}--aptOnly --pretty --package ${c[yellow]}package-name${c[end]}" 1>&2
     echo -e
     printf '  %-5s %-40s\n' "${c[grey1]}Options:${c[end]}" "" 1>&2
 
     printf '  %-5s %-81s %-40s\n' "    " "${c[blue2]}-p${c[grey1]},${c[blue2]}  --package ${c[yellow]}<string>${c[end]}        " "package name to search for${c[end]}" 1>&2
+    printf '  %-5s %-81s %-40s\n' "    " "${c[blue2]}-a${c[grey1]},${c[blue2]}  --aptOnly ${c[yellow]}${c[end]}                " "use apt-get to search for packages instead of apt-fetch${c[end]}" 1>&2
     printf '  %-5s %-81s %-40s\n' "    " "${c[blue2]}-f${c[grey1]},${c[blue2]}  --fileOnly ${c[yellow]}${c[end]}               " "only return url for package${c[end]}" 1>&2
     printf '  %-5s %-81s %-40s\n' "    " "${c[blue2]}-u${c[grey1]},${c[blue2]}  --urlOnly ${c[yellow]}${c[end]}                " "only return filename for package${c[end]}" 1>&2
+    printf '  %-5s %-81s %-40s\n' "    " "${c[blue2]}-P${c[grey1]},${c[blue2]}  --pretty ${c[yellow]}${c[end]}                 " "show results in formatted layout${c[end]}" 1>&2
     printf '  %-5s %-81s %-40s\n' "    " "${c[blue2]}-s${c[grey1]},${c[blue2]}  --status ${c[yellow]}${c[end]}                 " "view list of assigned variables${c[end]}" 1>&2
     printf '  %-5s %-81s %-40s\n' "    " "${c[blue2]}-v${c[grey1]},${c[blue2]}  --version ${c[yellow]}${c[end]}                " "current version of this app${c[end]}" 1>&2
     printf '  %-5s %-81s %-40s\n' "    " "${c[blue2]}-x${c[grey1]},${c[blue2]}  --dev ${c[yellow]}${c[end]}                    " "developer mode; verbose logging${c[end]}" 1>&2
@@ -213,13 +233,17 @@ while [ $# -gt 0 ]; do
             if [[ "$1" != *=* ]]; then shift; fi
             argPackage="${1#*=}"
             ;;
-        -f|--fileonly|--onlyfile)
-            if [[ "$1" != *=* ]]; then shift; fi
-            argBoolFileOnly="true"
+        -a|--aptOnly|--aptonly|--apt)
+            argBoolUseApt=true
             ;;
-        -u|--urlomly|--onlyurl)
-            if [[ "$1" != *=* ]]; then shift; fi
-            argBoolUrlOnly="true"
+        -P|--pretty|--prettify)
+            argBoolPretty=true
+            ;;
+        -f|--fileOnly|--fileonly|--onlyfile)
+            argBoolFileOnly=true
+            ;;
+        -u|--urlOnly|--urlomly|--onlyurl)
+            argBoolUrlOnly=true
             ;;
         -h|--help)
             opt_usage $FUNCNAME
@@ -231,12 +255,6 @@ while [ $# -gt 0 ]; do
     esac
     shift
 done
-
-# #
-#   clean cache
-# #
-
-sudo apt-get clean
 
 # #
 #   check if %FETCH (apt-move) available
@@ -259,43 +277,84 @@ if [ -z "${argPackage}" ]; then
 fi
 
 # #
+#   clean cache
+# #
+
+sudo apt-get clean
+
+# #
 #   get url of package
 # #
 
-url=$(sudo $FETCH -t ${argPackage} | tail -n 1)
+if [ "${argBoolUseApt}" = true ]; then
+    url_exitcode="0"
+    url="$(apt-get download --print-uris ${argPackage} "$@" 2>&1)" || { url_exitcode="$?" ; true; };
 
-# #
-#   filter URL-encode with ASCII Value
-# #
-
-url=${url//%23/\#}
-url=${url//%2b/\+}
-url=${url//%2d/\-}
-url=${url//%3a/\:}
-url=${url//%7e/\~}
-url=${url//%7b/\{}
-url=${url//%7d/\}}
-
-# #
-#   strip filename from url
-# #
-
-filename="${url##*/}"
-
-# #
-#   return filename and url
-#	
-#	usage:
-#		query=$( sudo ./apt-url "$pkg_arch" )
-#		app_filename=$( echo "$query" | head -n 1; )
-#		app_url=$( echo "$query" | tail -n 1; )
-# #
-
-if [ "${argBoolFileOnly}" == "true" ]; then
-    echo $filename
-elif [ "${argBoolUrlOnly}" == "true" ]; then
-    echo $url
+    IFS=' ' read -r url filename <<< "$url"
+    url=(${url[@]//\'/})
+    filename=(${filename[@]//\'/})
 else
-    echo $filename
-    echo $url
+    url_exitcode="0"
+    url="$( sudo $FETCH -t ${argPackage} 2>&1)" || { url_exitcode="$?" ; true; };
+fi
+
+# #
+#   output
+# #
+
+if echo "$url" | grep --quiet --ignore-case "Couldn't find package" ; then
+    if [ "${argBoolPretty}" = true ]; then
+        echo -e
+        echo -e "💡 Could not find package ${c[yellow]}${argPackage}${c[end]}"
+        echo -e
+    else
+        echo -e "Could not find package ${argPackage}"
+    fi
+else
+    url=$( echo "$url" | tail -n 1)
+
+    # #
+    #   filter URL-encode with ASCII Value
+    # #
+
+    url=${url//%23/\#}
+    url=${url//%2b/\+}
+    url=${url//%2d/\-}
+    url=${url//%3a/\:}
+    url=${url//%7e/\~}
+    url=${url//%7b/\{}
+    url=${url//%7d/\}}
+
+    # #
+    #   strip filename from url
+    # #
+
+    filename="${url##*/}"
+
+    # #
+    #   return filename and url
+    #   
+    #   usage:
+    #       query=$( sudo ./apt-url "$pkg_arch" )
+    #       app_filename=$( echo "$query" | head -n 1; )
+    #       app_url=$( echo "$query" | tail -n 1; )
+    # #
+
+    if [ "${argBoolPretty}" = true ]; then
+        echo -e
+        if [ "${argBoolUrlOnly}" = false ]; then
+            printf '%-13s %-29s %-65s\n' " " "  ${c[grey2]}File${c[end]}" "${c[green]}${filename}${c[end]}"
+        fi
+        if [ "${argBoolFileOnly}" = false ]; then
+            printf '%-13s %-29s %-65s\n' " " "  ${c[grey2]}URL${c[end]}" "${c[green]}${url}${c[end]}"
+        fi
+        echo -e
+    else
+        if [ "${argBoolUrlOnly}" = false ]; then
+            echo $filename
+        fi
+        if [ "${argBoolFileOnly}" = false ]; then
+            echo $url
+        fi
+    fi
 fi

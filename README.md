@@ -225,7 +225,7 @@ $ apt-get download --print-uris apt-url
 
 ## Build
 
-To build, you must have the following structure:
+To build, you must have the following structure. In the tree below, the folder `share/lintian` is optional and only contains Lintian overrides.
 
 ```
 📁 src
@@ -233,6 +233,8 @@ To build, you must have the following structure:
         📁 DEBIAN
             📄 control
         📁 usr
+            📁 bin
+                📄 apt-url
         📁 share
             📁 doc
                 📁 apt-url
@@ -240,12 +242,14 @@ To build, you must have the following structure:
                     📄 copyright
             📁 lintian
                 📁 overrides
-                    📄 PACKAGE_NAME
+                    📄 apt-url
 
     📁 apt-url_1.1.0-1_arm64
         📁 DEBIAN
             📄 control
         📁 usr
+            📁 bin
+                📄 apt-url
         📁 share
             📁 doc
                 📁 apt-url
@@ -253,7 +257,7 @@ To build, you must have the following structure:
                     📄 copyright
             📁 lintian
                 📁 overrides
-                    📄 PACKAGE_NAME
+                    📄 apt-url
 ```
 
 <br />
@@ -263,6 +267,7 @@ Compress the changelog:
 ```shell
 cd src
 gzip --best -n apt-url_1.1.0-1_amd64/usr/share/doc/apt-url/changelog.Debian
+gzip --best -n apt-url_1.1.0-1_arm64/usr/share/doc/apt-url/changelog.Debian
 ```
 
 <br />
@@ -280,6 +285,7 @@ dpkg-deb --root-owner-group --build apt-url_1.1.0-1_arm64
 Run Lintian:
 
 ```shell
+cd src
 lintian apt-url_1.1.0-1_amd64.deb --tag-display-limit 0
 lintian apt-url_1.1.0-1_arm64.deb --tag-display-limit 0
 ```
